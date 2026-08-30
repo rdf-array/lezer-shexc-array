@@ -1,0 +1,52 @@
+{
+  "name": "lezer-shexc",
+  "version": "0.1.0",
+  "description": "Incremental, error-tolerant Lezer grammar for ShEx Compact Syntax (ShExC), with CodeMirror highlighting tags",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "lezer-generator src/shexc.grammar -o src/parser.js",
+    "prepare": "npm run build",
+    "test": "mocha test/*test.js"
+  },
+  "keywords": [
+    "shex",
+    "shexc",
+    "lezer",
+    "codemirror",
+    "grammar"
+  ],
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shexjs/lezer-shexc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexjs/lezer-shexc/issues"
+  },
+  "homepage": "https://github.com/shexjs/lezer-shexc#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@lezer/highlight": "^1.2.1",
+    "@lezer/lr": "^1.4.2"
+  },
+  "devDependencies": {
+    "@lezer/generator": "^1.7.2",
+    "chai": "^4.5.0",
+    "mocha": "^11.7.6",
+    "shex-test": "github:shexSpec/shexTest#main"
+  }
+}

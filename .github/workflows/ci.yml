@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24, 26]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      # npm ci runs `prepare`, which regenerates src/parser.js from the grammar
+      - run: npm ci
+      - run: npm test
+      - name: the committed parser is the one the grammar generates
+        run: git diff --exit-code -- src/parser.js src/parser.terms.js
