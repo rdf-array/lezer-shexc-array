@@ -43,6 +43,10 @@ export const highlighting = styleTags({
   "MinInclusiveKw MinExclusiveKw MaxInclusiveKw MaxExclusiveKw LengthKw MinLengthKw MaxLengthKw TotalDigitsKw FractionDigitsKw": t.keyword,
   RdfTypeKw: t.keyword,
   ShapeAny: t.atom,
+  // templates (strawman: shex.js doc/templates.md): parameters read as
+  // SPARQL variables do, and the argument-list brackets as angle brackets
+  Var: t.special(t.variableName),
+  '"<<" ">>"': t.angleBracket,
   Comment: t.comment,
   'Cardinality/"*" Cardinality/"+" Cardinality/"?"': t.arithmeticOperator,
   'SenseFlags/"^"': t.operator,

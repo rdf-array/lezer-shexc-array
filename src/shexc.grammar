@@ -25,9 +25,19 @@ StartActions { CodeDecl+ }
 
 // ── shape expression declarations ───────────────────────────────────────
 ShapeExprDecl {
-  AbstractKw? ShapeExprLabel Restriction* (shapeExpression | ExternalKw)
+  AbstractKw? ShapeExprLabel TemplateParams? Restriction* (shapeExpression | ExternalKw)
 }
 Restriction { (RestrictsKw | "-") shapeOrRef }
+
+// ── templates (strawman: shex.js doc/templates.md) ──────────────────────
+// A parameter list after a shape label declares a template; an argument
+// list after a shape reference applies one; a ?var stands for a parameter
+// wherever a shape expression -- or, IRI-kinded, a predicate -- may appear
+TemplateParams { "<<" TemplateParam ("," TemplateParam)* ">>" }
+TemplateParam { Var IriKw? (ExtendsKw ShapeExprLabel)? }
+TemplateArgs { "<<" TemplateArg ("," TemplateArg)* ">>" }
+TemplateArg { inlineShapeExpression }
+ParamRef { Var }
 
 // ── shape expressions: OR over AND over NOT over atoms ──────────────────
 shapeExpression { shapeOrExpr }
@@ -47,6 +57,7 @@ shapeAtom {
   LitNodeConstraint |
   shapeOrRef NonLitNodeConstraint? |
   "(" shapeExpression ")" |
+  ParamRef |
   ShapeAny
 }
 ShapeAny { "." }
@@ -66,6 +77,7 @@ inlineShapeAtom {
   LitInlineNodeConstraint |
   inlineShapeOrRef NonLitInlineNodeConstraint? |
   "(" shapeExpression ")" |
+  ParamRef |
   ShapeAny
 }
 
@@ -94,7 +106,7 @@ inlineShapeOrRef { InlineShapeDefinition | ShapeRef }
 // without a space, the `@` and the label are one token, so that `@ex:S`
 // is never read as the language tag `@ex` -- what the reference lexer's
 // ATPNAME_LN/ATPNAME_NS do
-ShapeRef { ATIRIREF | ATPNAME_LN | ATPNAME_NS | ATBLANK_NODE_LABEL | "@" ShapeExprLabel }
+ShapeRef { (ATIRIREF | ATPNAME_LN | ATPNAME_NS | ATBLANK_NODE_LABEL | "@" ShapeExprLabel) TemplateArgs? }
 
 // ── node constraints ────────────────────────────────────────────────────
 NonLitNodeConstraint[@name=NodeConstraint] { nonLitInlineNodeConstraint Annotation* CodeDecl* }
@@ -200,7 +212,7 @@ CodeDecl { "%" iri (CODE | "%") }
 ShapeExprLabel { iri | BlankNode }
 TripleExprLabel { iri | BlankNode }
 
-Predicate { iri | RdfTypeKw }
+Predicate { iri | RdfTypeKw | ParamRef }
 
 iri { IRIREF | PrefixedName }
 PrefixedName { PNAME_LN | PNAME_NS }
@@ -256,6 +268,10 @@ BooleanLiteral { TrueKw | FalseKw }
   plx { "%" hex hex | "\\" $[_~.\-!$&'()*+,;=/?#@%] }
 
   BLANK_NODE_LABEL { "_:" (pnCharsU | $[0-9]) ((pnChars | ".")* pnChars)? }
+
+  // a template parameter: SPARQL's VARNAME (no "-" or "."), glued to its
+  // "?" so a bare cardinality never reads as one
+  Var { "?" (pnCharsU | $[0-9]) (pnCharsU | $[0-9\u{B7}\u{300}-\u{36F}\u{203F}-\u{2040}])* }
 
   ATIRIREF { "@" IRIREF }
   ATPNAME_LN { "@" PNAME_LN }
@@ -331,7 +347,7 @@ BooleanLiteral { TrueKw | FalseKw }
   TrueKw { "true" }
   FalseKw { "false" }
 
-  "=" "//" "{" "}" "&" "|" "," "(" ")" "[" "]" "$" "^^" "^" "." "~" ";" "*" "+" "?" "-" "%" "@"
+  "=" "//" "{" "}" "&" "|" "," "(" ")" "[" "]" "$" "^^" "^" "." "~" ";" "*" "+" "?" "-" "%" "@" "<<" ">>"
 
   @precedence {
     LANG_STRING_LITERAL_LONG1, LANG_STRING_LITERAL_LONG2, LANG_STRING_LITERAL1, LANG_STRING_LITERAL2,
@@ -340,6 +356,7 @@ BooleanLiteral { TrueKw | FalseKw }
     REPEAT_RANGE, CODE, "{",
     Comment, REGEXP, "//",
     ATIRIREF, ATPNAME_LN, ATPNAME_NS, ATBLANK_NODE_LABEL, LANGTAG, LANG_WILDCARD, "@",
+    Var, "?",
     "^^", "^",
     IRIREF, BLANK_NODE_LABEL, PNAME_LN, PNAME_NS,
     BaseKw, PrefixKw, ImportKw, StartKw, ExternalKw, AbstractKw, RestrictsKw, ExtendsKw,

@@ -34,6 +34,8 @@ const roles = tagHighlighter([
   {tag: t.string, class: "string"},
   {tag: t.logicOperator, class: "logic"},
   {tag: t.definitionKeyword, class: "directive"},
+  {tag: t.special(t.variableName), class: "parameter"},
+  {tag: t.angleBracket, class: "template-bracket"},
 ]);
 
 /** what the highlighter says each token is, as [text, role] pairs */
@@ -162,6 +164,63 @@ describe("lezer-shexc", function () {
       expect(classOf("{ code %}")).to.equal("code");
       expect(classOf("\"lit\"@en")).to.equal("string");
       expect(classOf("OR")).to.equal("logic");
+    });
+  });
+
+  describe("templates (strawman: shex.js doc/templates.md)", function () {
+    const text = [
+      "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+      "PREFIX ex: <http://ex.example/#>",
+      "<#List1Plus><<?T>> CLOSED {",
+      "  rdf:first ?T ;",
+      "  rdf:rest [rdf:nil] OR @<#List1Plus><<?T>>",
+      "}",
+      "<#Qualified><<?P IRI, ?V EXTENDS <#Base>>> { ?P ?V ? }",
+      "<#ShapeDeclList1Plus> @<#List1Plus><< @<#ShapeDecl> >>",
+      "<#use> { ex:q @ex:L<< xsd:integer, @<#D> >> }",
+    ].join("\n");
+    const tree = parser.parse(text);
+
+    it("should parse a templated schema whole and clean", function () {
+      expect(errorsIn(tree)).to.deep.equal([]);
+      expect(tree.length).to.equal(text.length);
+    });
+
+    it("should name the template constructs", function () {
+      const names = new Set();
+      tree.iterate({enter (node) { names.add(node.name); }});
+      ["TemplateParams", "TemplateParam", "TemplateArgs", "TemplateArg", "ParamRef", "Var"]
+        .forEach(name => expect([...names], name).to.include(name));
+    });
+
+    it("should highlight ?vars as parameters and << >> as template brackets", function () {
+      const tokens = tokensOf(text);
+      const classOf = (tokenText, nth = 0) => tokens.filter(([t]) => t === tokenText)[nth][1];
+      expect(classOf("?T")).to.equal("parameter");       // declared
+      expect(classOf("?T", 1)).to.equal("parameter");    // used as a value expression
+      expect(classOf("?P", 1)).to.equal("parameter");    // used as a predicate
+      expect(classOf("<<")).to.equal("template-bracket");
+      expect(classOf(">>")).to.equal("template-bracket");
+      expect(classOf("IRI")).to.equal("type");           // the parameter kind
+      expect(classOf("EXTENDS")).to.equal("modifier");   // the bound
+      expect(classOf("@<#ShapeDecl>")).to.equal("reference"); // a reference argument
+    });
+
+    it("should still read a bare `?` as a cardinality", function () {
+      const q = parser.parse("<#S> { <p1> . ? }");
+      expect(errorsIn(q)).to.deep.equal([]);
+      const names = new Set();
+      q.iterate({enter (node) { names.add(node.name); }});
+      expect([...names]).to.include("Cardinality");
+      expect([...names]).not.to.include("Var");
+    });
+
+    it("should close nested applications' >> pairs", function () {
+      const nested = parser.parse("<#n> @<#L><<@<#L><<@<#D>>>>>");
+      expect(errorsIn(nested)).to.deep.equal([]);
+      let apps = 0;
+      nested.iterate({enter (node) { if (node.name === "TemplateArgs") apps++; }});
+      expect(apps).to.equal(2);
     });
   });
 
