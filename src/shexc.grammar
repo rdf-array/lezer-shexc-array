@@ -56,10 +56,21 @@ shapeAtom {
   NonLitNodeConstraint shapeOrRef? |
   LitNodeConstraint |
   shapeOrRef NonLitNodeConstraint? |
+  Collection |
   "(" shapeExpression ")" |
   ParamRef |
   ShapeAny
 }
+
+// RDF-: `((shapeExpr))[m, n]` is a Collection shape expression: a sequence of m
+// to n elements each satisfying shapeExpr.  `[m]` is exactly m, `[m, *]` or
+// `[m,]` at least m, no bounds any length (as in jena-array's shex.jj).  `((x))` is always a Collection, never a
+// doubly parenthesised x: at `( ( x ) · )` the collection's closing paren is
+// shifted rather than the inner `( x )` reduced to a parenthesised atom.
+// (shex.js's ShExJison.jison resolves the same conflict the same way.)
+@precedence { collection }
+Collection { "(" "(" shapeExpression ")" !collection ")" CollectionBounds? }
+CollectionBounds { "[" INTEGER ("," (INTEGER | "*")?)? "]" }
 ShapeAny { "." }
 
 // ...and the inline variants, inside a triple constraint: no annotations or
@@ -76,6 +87,7 @@ inlineShapeAtom {
   NonLitInlineNodeConstraint inlineShapeOrRef? |
   LitInlineNodeConstraint |
   inlineShapeOrRef NonLitInlineNodeConstraint? |
+  Collection |
   "(" shapeExpression ")" |
   ParamRef |
   ShapeAny
@@ -95,6 +107,7 @@ extendsShapeAtom {
   NonLitInlineNodeConstraint inlineShapeOrRef |
   LitInlineNodeConstraint |
   inlineShapeOrRef NonLitInlineNodeConstraint? |
+  Collection |
   "(" shapeExpression ")" |
   ShapeAny
 }

@@ -167,6 +167,51 @@ describe("lezer-shexc", function () {
     });
   });
 
+  describe("RDF- collections: ((shapeExpr))[min, max]", function () {
+    const text = [
+      "PREFIX ex: <http://ex.example/>",
+      "ex:S { ex:p ((ex:T))[2, *] ; ex:q ((IRI OR @ex:T)) ; ex:r ((LITERAL))[3] }",
+      "ex:L ((@ex:S))[1, 2] AND NOT ((ex:T))",
+      "ex:N ((((ex:T))[2]))[0, 1]",
+      "ex:M ((ex:T))[1,]",
+      "ex:P (ex:T)",
+      "ex:Q ((ex:T) OR BNODE)",
+    ].join("\n");
+    const tree = parser.parse(text);
+    const nodesNamed = name => {
+      const found = [];
+      tree.iterate({enter (node) { if (node.name === name) found.push(text.slice(node.from, node.to)); }});
+      return found;
+    };
+
+    it("should be whole and clean", function () {
+      expect(errorsIn(tree)).to.deep.equal([]);
+      expect(tree.length).to.equal(text.length);
+    });
+
+    it("should read ((shapeExpr)) as a Collection, with its bounds", function () {
+      expect(nodesNamed("Collection")).to.deep.equal([
+        "((ex:T))[2, *]", "((IRI OR @ex:T))", "((LITERAL))[3]",
+        "((@ex:S))[1, 2]", "((ex:T))",
+        "((((ex:T))[2]))[0, 1]", "((ex:T))[2]", "((ex:T))[1,]",
+      ]);
+      expect(nodesNamed("CollectionBounds")).to.deep.equal(["[2, *]", "[3]", "[1, 2]", "[2]", "[0, 1]", "[1,]"]);
+    });
+
+    it("should leave (shapeExpr) a parenthesised shape expression", function () {
+      const decls = nodesNamed("ShapeExprDecl");
+      expect(decls[decls.length - 2]).to.equal("ex:P (ex:T)");
+      expect(decls[decls.length - 1]).to.equal("ex:Q ((ex:T) OR BNODE)");
+      expect(nodesNamed("Collection").some(c => c.includes("BNODE"))).to.equal(false);
+    });
+
+    it("should highlight the bounds as numbers", function () {
+      const tokens = tokensOf("<S> ((IRI))[2, *]");
+      expect(tokens.filter(([, role]) => role === "number").map(([t]) => t)).to.deep.equal(["2"]);
+      expect(tokens.some(([t, role]) => t === "*" && role === "arithmeticOperator")).to.equal(false); // no role configured for it
+    });
+  });
+
   describe("templates (strawman: shex.js doc/templates.md)", function () {
     const text = [
       "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",

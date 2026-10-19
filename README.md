@@ -1,4 +1,14 @@
-# lezer-shexc
+<img src=".github/rdf-array-logo.png" alt="[lezer-shexc]" width="96" align="right">
+
+# lezer-shexc-array: lezer-shexc with ShEx- collections
+
+**RDF-** fork of [lezer-shexc](https://github.com/shexjs/lezer-shexc): the grammar gains
+the **Collection** shape expression of ShEx-, `((shapeExpr))[min, max]`, which matches a
+sequence term of `min` to `max` elements each satisfying `shapeExpr` (`[m]` exactly `m`,
+`[m, *]` or `[m,]` at least `m`, no bounds any length). `((x))` is always a Collection, never a
+doubly parenthesised `x`; `(x)` stays a parenthesised shape expression. The tree nodes are
+`Collection` and `CollectionBounds`.
+
 
 An incremental, error-tolerant [Lezer](https://lezer.codemirror.net/)
 grammar for ShEx Compact Syntax (ShExC), with highlighting tags for
