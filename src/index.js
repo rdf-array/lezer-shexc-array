@@ -49,7 +49,7 @@ export const highlighting = styleTags({
   '"<<" ">>"': t.angleBracket,
   Comment: t.comment,
   'Cardinality/"*" Cardinality/"+" Cardinality/"?"': t.arithmeticOperator,
-  // RDF-: the bounds of a Collection, ((shapeExpr))[min, max], read as a cardinality
+  // rdf-array: the bounds of a Collection, ((shapeExpr))[min, max], read as a cardinality
   'CollectionBounds/"*"': t.arithmeticOperator,
   'SenseFlags/"^"': t.operator,
   '"//" ^^ ~ = $ & | @ %': t.operator,

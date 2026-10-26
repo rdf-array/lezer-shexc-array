@@ -62,7 +62,7 @@ shapeAtom {
   ShapeAny
 }
 
-// RDF-: `((shapeExpr))[m, n]` is a Collection shape expression: a sequence of m
+// rdf-array: `((shapeExpr))[m, n]` is a Collection shape expression: a sequence of m
 // to n elements each satisfying shapeExpr.  `[m]` is exactly m, `[m, *]` or
 // `[m,]` at least m, no bounds any length (as in jena-array's shex.jj).  `((x))` is always a Collection, never a
 // doubly parenthesised x: at `( ( x ) · )` the collection's closing paren is

@@ -167,7 +167,7 @@ describe("lezer-shexc", function () {
     });
   });
 
-  describe("RDF- collections: ((shapeExpr))[min, max]", function () {
+  describe("rdf-array collections: ((shapeExpr))[min, max]", function () {
     const text = [
       "PREFIX ex: <http://ex.example/>",
       "ex:S { ex:p ((ex:T))[2, *] ; ex:q ((IRI OR @ex:T)) ; ex:r ((LITERAL))[3] }",
